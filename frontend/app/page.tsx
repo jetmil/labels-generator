@@ -82,6 +82,13 @@ export default function Home() {
     }
   };
 
+  const handleQuantityInput = (id: number, value: string) => {
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue >= 1 && numValue <= 100) {
+      updateQuantityMutation.mutate({ id, quantity: numValue });
+    }
+  };
+
   const selectAll = () => {
     if (candles) {
       setSelectedCandles(candles.map(c => c.id));
@@ -276,9 +283,14 @@ export default function Home() {
                           >
                             −
                           </button>
-                          <span className="w-12 text-center font-semibold text-gray-100">
-                            {candle.quantity}
-                          </span>
+                          <input
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={candle.quantity}
+                            onChange={(e) => handleQuantityInput(candle.id, e.target.value)}
+                            className="w-16 text-center font-semibold bg-gray-600 border border-gray-500 text-gray-100 rounded px-2 py-1 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                          />
                           <button
                             onClick={() => handleQuantityChange(candle.id, 1)}
                             disabled={candle.quantity >= 100}
