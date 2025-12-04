@@ -16,11 +16,16 @@ export default function Home() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'created_at'>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
 
   const { data: candles, isLoading } = useQuery({
-    queryKey: ['candles', sortBy, sortOrder],
-    queryFn: () => candleApi.getAll({ sort_by: sortBy, sort_order: sortOrder }),
+    queryKey: ['candles', sortBy, sortOrder, searchQuery],
+    queryFn: () => candleApi.getAll({
+      sort_by: sortBy,
+      sort_order: sortOrder,
+      search: searchQuery || undefined,
+    }),
   });
 
   const { data: categories } = useQuery({
@@ -57,6 +62,24 @@ export default function Home() {
         ? prev.filter(candleId => candleId !== id)
         : [...prev, id]
     );
+  };
+
+  const updateQuantityMutation = useMutation({
+    mutationFn: ({ id, quantity }: { id: number; quantity: number }) =>
+      candleApi.update(id, { quantity }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['candles'] });
+    },
+  });
+
+  const handleQuantityChange = (id: number, delta: number) => {
+    const candle = candles?.find(c => c.id === id);
+    if (!candle) return;
+
+    const newQuantity = Math.max(1, Math.min(100, candle.quantity + delta));
+    if (newQuantity !== candle.quantity) {
+      updateQuantityMutation.mutate({ id, quantity: newQuantity });
+    }
   };
 
   const selectAll = () => {
@@ -114,45 +137,65 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mb-4 flex justify-between items-center">
+          <div className="mb-4 space-y-3">
             <div className="flex gap-2">
-              {selectedCandles.length > 0 && (
-                <>
-                  <button
-                    onClick={selectAll}
-                    className="text-sm text-purple-600 hover:text-purple-700"
-                  >
-                    Выбрать все
-                  </button>
-                  <span className="text-gray-400">|</span>
-                  <button
-                    onClick={deselectAll}
-                    className="text-sm text-purple-600 hover:text-purple-700"
-                  >
-                    Снять выделение
-                  </button>
-                </>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Поиск по названию свечи..."
+                className="flex-1 bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-4 py-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="px-4 py-2 bg-gray-600 text-gray-200 rounded-lg hover:bg-gray-500"
+                >
+                  Сбросить
+                </button>
               )}
             </div>
 
-            <div className="flex gap-3 items-center">
-              <span className="text-sm text-gray-300">Сортировка:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'name' | 'created_at')}
-                className="bg-gray-700 border-gray-600 text-gray-100 rounded px-3 py-1 text-sm"
-              >
-                <option value="created_at">По дате</option>
-                <option value="name">По названию</option>
-              </select>
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                className="bg-gray-700 border-gray-600 text-gray-100 rounded px-3 py-1 text-sm"
-              >
-                <option value="desc">Убывание</option>
-                <option value="asc">Возрастание</option>
-              </select>
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                {selectedCandles.length > 0 && (
+                  <>
+                    <button
+                      onClick={selectAll}
+                      className="text-sm text-purple-600 hover:text-purple-700"
+                    >
+                      Выбрать все
+                    </button>
+                    <span className="text-gray-400">|</span>
+                    <button
+                      onClick={deselectAll}
+                      className="text-sm text-purple-600 hover:text-purple-700"
+                    >
+                      Снять выделение
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <div className="flex gap-3 items-center">
+                <span className="text-sm text-gray-300">Сортировка:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'name' | 'created_at')}
+                  className="bg-gray-700 border-gray-600 text-gray-100 rounded px-3 py-1 text-sm"
+                >
+                  <option value="created_at">По дате</option>
+                  <option value="name">По названию</option>
+                </select>
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                  className="bg-gray-700 border-gray-600 text-gray-100 rounded px-3 py-1 text-sm"
+                >
+                  <option value="desc">Убывание</option>
+                  <option value="asc">Возрастание</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -222,6 +265,29 @@ export default function Home() {
                       <p className="text-sm text-gray-300 mt-2 line-clamp-2">
                         {candle.description}
                       </p>
+
+                      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-600">
+                        <span className="text-sm text-gray-400">Количество для печати:</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleQuantityChange(candle.id, -1)}
+                            disabled={candle.quantity <= 1}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-600 text-white rounded hover:bg-gray-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            −
+                          </button>
+                          <span className="w-12 text-center font-semibold text-gray-100">
+                            {candle.quantity}
+                          </span>
+                          <button
+                            onClick={() => handleQuantityChange(candle.id, 1)}
+                            disabled={candle.quantity >= 100}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-600 text-white rounded hover:bg-gray-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

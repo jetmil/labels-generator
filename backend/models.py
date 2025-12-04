@@ -27,6 +27,7 @@ class Candle(Base):
     website = Column(String(200), default="art-svechi.ligardi.ru")
     qr_image = Column(String(500))
     logo_image = Column(String(500))
+    quantity = Column(Integer, default=1)
     is_active = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())

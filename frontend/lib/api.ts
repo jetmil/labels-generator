@@ -27,6 +27,7 @@ export interface Candle {
   website: string;
   qr_image?: string;
   logo_image?: string;
+  quantity: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -46,6 +47,7 @@ export const candleApi = {
   getAll: async (params?: {
     category_id?: number;
     is_active?: boolean;
+    search?: string;
     sort_by?: 'name' | 'created_at';
     sort_order?: 'asc' | 'desc';
   }) => {

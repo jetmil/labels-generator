@@ -644,17 +644,24 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
 
         html_template += '    </div>\n\n'
 
+    # Создаём расширенный список свечей с учётом количества копий
+    expanded_candles = []
+    for candle in candles:
+        quantity = getattr(candle, 'quantity', 1) or 1
+        for _ in range(quantity):
+            expanded_candles.append(candle)
+
     # Group candles into label pages (9 per page)
     labels_per_page_count = 9
     label_pages = []
-    for i in range(0, len(candles), labels_per_page_count):
-        label_pages.append(candles[i:i + labels_per_page_count])
+    for i in range(0, len(expanded_candles), labels_per_page_count):
+        label_pages.append(expanded_candles[i:i + labels_per_page_count])
 
     # Group candles into instruction pages (4 per page)
     instructions_per_page_count = 4
     instruction_pages = []
-    for i in range(0, len(candles), instructions_per_page_count):
-        instruction_pages.append(candles[i:i + instructions_per_page_count])
+    for i in range(0, len(expanded_candles), instructions_per_page_count):
+        instruction_pages.append(expanded_candles[i:i + instructions_per_page_count])
 
     # Generate label pages
     for page_num, page_candles in enumerate(label_pages):

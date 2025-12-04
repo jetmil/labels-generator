@@ -55,6 +55,7 @@ def get_candles(
     limit: int = 100,
     category_id: Optional[int] = None,
     is_active: Optional[bool] = True,
+    search: Optional[str] = None,
     sort_by: Optional[str] = "created_at",  # name, created_at
     sort_order: Optional[str] = "desc",  # asc, desc
     db: Session = Depends(get_db)
@@ -64,6 +65,10 @@ def get_candles(
         query = query.filter(Candle.category_id == category_id)
     if is_active is not None:
         query = query.filter(Candle.is_active == is_active)
+
+    # Поиск по названию
+    if search:
+        query = query.filter(Candle.name.ilike(f"%{search}%"))
 
     # Применяем сортировку
     if sort_by == "name":
@@ -83,7 +88,12 @@ def get_candle(candle_id: int, db: Session = Depends(get_db)):
 
 @app.post("/api/candles", response_model=schemas.Candle)
 def create_candle(candle: schemas.CandleCreate, db: Session = Depends(get_db)):
-    db_candle = Candle(**candle.dict())
+    candle_data = candle.dict()
+    # Конвертируем category_id=0 в NULL
+    if candle_data.get('category_id') == 0:
+        candle_data['category_id'] = None
+
+    db_candle = Candle(**candle_data)
     db.add(db_candle)
     db.commit()
     db.refresh(db_candle)
@@ -96,6 +106,10 @@ def update_candle(candle_id: int, candle: schemas.CandleUpdate, db: Session = De
         raise HTTPException(status_code=404, detail="Candle not found")
 
     update_data = candle.dict(exclude_unset=True)
+    # Конвертируем category_id=0 в NULL
+    if 'category_id' in update_data and update_data['category_id'] == 0:
+        update_data['category_id'] = None
+
     for field, value in update_data.items():
         setattr(db_candle, field, value)
 

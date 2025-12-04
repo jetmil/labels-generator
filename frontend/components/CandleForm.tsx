@@ -26,6 +26,7 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
     website: 'art-svechi.ligardi.ru',
     qr_image: '',
     logo_image: '',
+    quantity: 1,
     is_active: true,
   });
   const [newCategory, setNewCategory] = useState('');
@@ -46,6 +47,7 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
         website: candle.website,
         qr_image: candle.qr_image || '',
         logo_image: candle.logo_image || '',
+        quantity: candle.quantity || 1,
         is_active: candle.is_active,
       });
     }
@@ -193,6 +195,20 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
                 </button>
               </div>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1 text-gray-300">Количество копий для печати</label>
+            <input
+              type="number"
+              min="1"
+              max="100"
+              value={formData.quantity}
+              onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+              className="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+              placeholder="Сколько копий печатать"
+            />
+            <p className="text-xs text-gray-400 mt-1">При генерации этикеток эта свеча будет продублирована указанное количество раз</p>
           </div>
 
           <div>

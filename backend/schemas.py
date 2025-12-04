@@ -30,6 +30,7 @@ class CandleBase(BaseModel):
     website: str = "art-svechi.ligardi.ru"
     qr_image: Optional[str] = None
     logo_image: Optional[str] = None
+    quantity: int = 1
     is_active: bool = True
 
 class CandleCreate(CandleBase):
@@ -48,6 +49,7 @@ class CandleUpdate(BaseModel):
     website: Optional[str] = None
     qr_image: Optional[str] = None
     logo_image: Optional[str] = None
+    quantity: Optional[int] = None
     is_active: Optional[bool] = None
 
 class Candle(CandleBase):
