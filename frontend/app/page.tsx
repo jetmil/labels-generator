@@ -195,6 +195,12 @@ export default function Home() {
                           <p className="text-sm text-purple-600 mt-1">
                             {candle.category?.name || 'Без категории'}
                           </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Создано: {new Date(candle.created_at).toLocaleDateString('ru-RU')}
+                            {candle.updated_at && candle.updated_at !== candle.created_at && (
+                              <> • Изменено: {new Date(candle.updated_at).toLocaleDateString('ru-RU')}</>
+                            )}
+                          </p>
                         </div>
                         <div className="flex gap-2">
                           <button
