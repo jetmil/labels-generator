@@ -155,10 +155,21 @@ def create_label_set(label_set: schemas.LabelSetCreate, db: Session = Depends(ge
 # Upload endpoints
 @app.post("/api/upload/logo")
 async def upload_logo(file: UploadFile = File(...)):
-    if not file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No filename provided")
+
+    # Защита от path traversal - только базовое имя файла
+    from pathlib import Path
+    safe_filename = Path(file.filename).name
+
+    if not safe_filename.lower().endswith(('.png', '.jpg', '.jpeg')):
         raise HTTPException(status_code=400, detail="Only PNG and JPEG files are allowed")
 
-    filename = f"logo_{datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}"
+    # Дополнительная проверка на опасные символы
+    if any(char in safe_filename for char in ['..', '/', '\\', '\0']):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    filename = f"logo_{datetime.now().strftime('%Y%m%d%H%M%S')}_{safe_filename}"
     file_path = os.path.join("/var/www/labels/uploads/logos", filename)
 
     with open(file_path, "wb") as buffer:
@@ -168,10 +179,21 @@ async def upload_logo(file: UploadFile = File(...)):
 
 @app.post("/api/upload/qr")
 async def upload_qr(file: UploadFile = File(...)):
-    if not file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No filename provided")
+
+    # Защита от path traversal - только базовое имя файла
+    from pathlib import Path
+    safe_filename = Path(file.filename).name
+
+    if not safe_filename.lower().endswith(('.png', '.jpg', '.jpeg')):
         raise HTTPException(status_code=400, detail="Only PNG and JPEG files are allowed")
 
-    filename = f"qr_{datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}"
+    # Дополнительная проверка на опасные символы
+    if any(char in safe_filename for char in ['..', '/', '\\', '\0']):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    filename = f"qr_{datetime.now().strftime('%Y%m%d%H%M%S')}_{safe_filename}"
     file_path = os.path.join("/var/www/labels/uploads/qr", filename)
 
     with open(file_path, "wb") as buffer:

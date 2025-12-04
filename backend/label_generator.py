@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from models import Candle
 import base64
 import os
@@ -16,6 +16,60 @@ def image_to_base64(image_path: str) -> str:
     except Exception as e:
         print(f"Error converting image {image_path}: {e}")
     return ""
+
+def get_text_size_class(text: str, thresholds: Dict[str, int]) -> str:
+    """
+    Определяет CSS класс для текста в зависимости от длины
+    thresholds: {'short': 50, 'medium': 150, 'long': 300, 'very_long': 500}
+    """
+    text_len = len(text) if text else 0
+
+    if text_len == 0:
+        return 'text-empty'
+    elif text_len < thresholds.get('short', 50):
+        return 'text-short'
+    elif text_len < thresholds.get('medium', 150):
+        return 'text-medium'
+    elif text_len < thresholds.get('long', 300):
+        return 'text-long'
+    elif text_len < thresholds.get('very_long', 500):
+        return 'text-very-long'
+    else:
+        return 'text-overflow'
+
+def check_overflow(candle: Candle) -> List[str]:
+    """
+    Проверяет переполнение текста в свече
+    Возвращает список предупреждений
+    """
+    warnings = []
+
+    # Проверка названия
+    if len(candle.name) > 30:
+        warnings.append(f"Название слишком длинное ({len(candle.name)} символов, рекомендуется до 30)")
+
+    # Проверка описания для этикетки (короткая версия)
+    if len(candle.description) > 250:
+        warnings.append(f"Описание слишком длинное ({len(candle.description)} символов, рекомендуется до 250)")
+
+    # Проверка практики для инструкции
+    if candle.practice and len(candle.practice) > 400:
+        warnings.append(f"Практика слишком длинная ({len(candle.practice)} символов, рекомендуется до 400)")
+
+    # Проверка заговора
+    if candle.ritual_text and len(candle.ritual_text) > 300:
+        warnings.append(f"Заговор слишком длинный ({len(candle.ritual_text)} символов, рекомендуется до 300)")
+
+    # Общая проверка для инструкции
+    total_instruction_length = (
+        len(candle.description) +
+        len(candle.practice or '') +
+        len(candle.ritual_text or '')
+    )
+    if total_instruction_length > 800:
+        warnings.append(f"Общий объём текста инструкции критический ({total_instruction_length} символов, может не поместиться на карточке)")
+
+    return warnings
 
 def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str:
     """Generate HTML for printing labels with rich magical design"""
@@ -138,6 +192,11 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
 
         .label-name.long-title {
             font-size: 11pt;
+        }
+
+        .label-name.very-long-title {
+            font-size: 9pt;
+            line-height: 1.0;
         }
 
         .label-tagline {
@@ -329,6 +388,15 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
             text-transform: uppercase;
         }
 
+        .instruction-title h2.long-title {
+            font-size: 14pt;
+        }
+
+        .instruction-title h2.very-long-title {
+            font-size: 11pt;
+            line-height: 1.1;
+        }
+
         .instruction-subtitle {
             font-size: 10pt;
             color: #8b2c5f;
@@ -388,6 +456,21 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
             font-weight: 400;
         }
 
+        .instruction-section.text-long p {
+            font-size: 8pt;
+            line-height: 1.2;
+        }
+
+        .instruction-section.text-very-long p {
+            font-size: 7pt;
+            line-height: 1.15;
+        }
+
+        .instruction-section.text-overflow p {
+            font-size: 6.5pt;
+            line-height: 1.1;
+        }
+
         .instruction-spell {
             background: rgba(139,44,95,0.08);
             border-left: 2px solid #8b2c5f;
@@ -415,6 +498,21 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
             font-weight: 500;
         }
 
+        .instruction-spell.text-long p {
+            font-size: 7.5pt;
+            line-height: 1.2;
+        }
+
+        .instruction-spell.text-very-long p {
+            font-size: 6.5pt;
+            line-height: 1.15;
+        }
+
+        .instruction-spell.text-overflow p {
+            font-size: 6pt;
+            line-height: 1.1;
+        }
+
         .instruction-footer {
             margin-top: auto;
             padding-top: 6px;
@@ -437,8 +535,72 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
             color: #5d1a75;
         }
 
+        /* Страница с предупреждениями */
+        .warnings-page {
+            width: 210mm;
+            height: 297mm;
+            background: white;
+            margin: 20px auto;
+            padding: 20mm;
+        }
+
+        .warnings-header {
+            text-align: center;
+            margin-bottom: 15mm;
+            padding-bottom: 5mm;
+            border-bottom: 3px solid #ff6b6b;
+        }
+
+        .warnings-header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28pt;
+            color: #c92a2a;
+            margin-bottom: 5mm;
+        }
+
+        .warnings-header p {
+            font-size: 12pt;
+            color: #666;
+        }
+
+        .warning-item {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe3e3 100%);
+            border-left: 4px solid #ff6b6b;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+        }
+
+        .warning-candle-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 14pt;
+            font-weight: 700;
+            color: #c92a2a;
+            margin-bottom: 5px;
+        }
+
+        .warning-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .warning-list li {
+            font-size: 10pt;
+            color: #333;
+            padding: 3px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .warning-list li:before {
+            content: '⚠';
+            position: absolute;
+            left: 0;
+            color: #ff922b;
+        }
+
         @media screen {
-            .page-labels, .page-instructions {
+            .page-labels, .page-instructions, .warnings-page {
                 margin: 20px auto;
                 box-shadow: 0 0 20px rgba(0,0,0,0.5);
             }
@@ -447,6 +609,40 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
 </head>
 <body>
 """
+
+    # Собираем предупреждения для всех свечей
+    all_warnings = {}
+    for candle in candles:
+        warnings = check_overflow(candle)
+        if warnings:
+            all_warnings[candle.id] = {
+                'name': candle.name,
+                'warnings': warnings
+            }
+
+    # Генерируем страницу предупреждений если есть проблемы
+    if all_warnings:
+        html_template += '    <!-- СТРАНИЦА ПРЕДУПРЕЖДЕНИЙ -->\n'
+        html_template += '    <div class="page warnings-page">\n'
+        html_template += '        <div class="warnings-header">\n'
+        html_template += '            <h1>⚠ Предупреждения о переполнении текста</h1>\n'
+        html_template += f'            <p>Найдено проблем в {len(all_warnings)} свечах из {len(candles)}</p>\n'
+        html_template += '        </div>\n'
+
+        for candle_id, data in all_warnings.items():
+            html_template += f'''
+        <div class="warning-item">
+            <div class="warning-candle-name">{data['name']}</div>
+            <ul class="warning-list">
+'''
+            for warning in data['warnings']:
+                html_template += f'                <li>{warning}</li>\n'
+
+            html_template += '''            </ul>
+        </div>
+'''
+
+        html_template += '    </div>\n\n'
 
     # Group candles into label pages (9 per page)
     labels_per_page_count = 9
@@ -479,8 +675,14 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
             logo_base64 = image_to_base64(logo_abs) or logo_path
             qr_base64 = image_to_base64(qr_abs) or qr_path
 
-            # Check if name is long
-            name_class = "label-name long-title" if len(candle.name) > 15 else "label-name"
+            # Check if name is long - адаптивный размер
+            name_len = len(candle.name)
+            if name_len > 30:
+                name_class = "label-name very-long-title"
+            elif name_len > 15:
+                name_class = "label-name long-title"
+            else:
+                name_class = "label-name"
 
             html_template += f"""
         <div class="label">
@@ -532,6 +734,20 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
             logo_base64 = image_to_base64(logo_abs) or logo_path
             qr_base64 = image_to_base64(qr_abs) or qr_path
 
+            # Адаптивные классы для заголовка
+            title_len = len(candle.name)
+            if title_len > 30:
+                title_class = "very-long-title"
+            elif title_len > 20:
+                title_class = "long-title"
+            else:
+                title_class = ""
+
+            # Адаптивные классы для текстов
+            desc_class = get_text_size_class(candle.description, {'short': 100, 'medium': 200, 'long': 300, 'very_long': 400})
+            practice_class = get_text_size_class(candle.practice or '', {'short': 150, 'medium': 250, 'long': 350, 'very_long': 450})
+            ritual_class = get_text_size_class(candle.ritual_text or '', {'short': 100, 'medium': 200, 'long': 280, 'very_long': 350})
+
             html_template += f"""
         <div class="instruction-card">
             <div class="instruction-header">
@@ -539,7 +755,7 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
                     <img src="{logo_base64}" alt="АРТ-СВЕЧИ">
                 </div>
                 <div class="instruction-title">
-                    <h2>{candle.name}</h2>
+                    <h2 class="{title_class}">{candle.name}</h2>
                     {f'<div class="instruction-subtitle">{candle.tagline}</div>' if candle.tagline else ''}
                 </div>
                 <div class="instruction-qr">
@@ -547,15 +763,15 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
                 </div>
             </div>
             <div class="instruction-content">
-                {f'''<div class="instruction-section">
+                {f'''<div class="instruction-section {desc_class}">
                     <h3>Описание</h3>
                     <p>{candle.description}</p>
                 </div>''' if candle.description else ''}
-                {f'''<div class="instruction-section">
+                {f'''<div class="instruction-section {practice_class}">
                     <h3>Как работать</h3>
                     <p>{candle.practice}</p>
                 </div>''' if candle.practice else ''}
-                {f'''<div class="instruction-spell">
+                {f'''<div class="instruction-spell {ritual_class}">
                     <h3>Заговор</h3>
                     <p>{candle.ritual_text}</p>
                 </div>''' if candle.ritual_text else ''}

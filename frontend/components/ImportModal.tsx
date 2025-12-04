@@ -44,13 +44,13 @@ export default function ImportModal({ onClose }: ImportModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Массовый импорт свечей</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+      <div className="bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+        <div className="sticky top-0 bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-100">Массовый импорт свечей</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-400 hover:text-gray-200"
           >
             <X size={24} />
           </button>
@@ -58,12 +58,12 @@ export default function ImportModal({ onClose }: ImportModalProps) {
 
         <div className="p-6 space-y-6">
           {/* Инструкция */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+          <div className="bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-4">
+            <h3 className="font-semibold text-blue-300 mb-2 flex items-center gap-2">
               <FileText size={18} />
               Инструкция
             </h3>
-            <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
+            <ol className="list-decimal list-inside space-y-1 text-sm text-blue-200">
               <li>Скачайте шаблон CSV файла</li>
               <li>Заполните его данными (можно добавить до 20-30 свечей)</li>
               <li>Сохраните файл в формате CSV или JSON</li>
@@ -84,10 +84,10 @@ export default function ImportModal({ onClose }: ImportModalProps) {
 
           {/* Загрузка файла */}
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2 text-gray-300">
               Выберите файл для импорта (CSV или JSON)
             </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center bg-gray-700 hover:bg-gray-650">
               <input
                 type="file"
                 accept=".csv,.json"
@@ -100,7 +100,7 @@ export default function ImportModal({ onClose }: ImportModalProps) {
                 className="cursor-pointer flex flex-col items-center gap-2"
               >
                 <Upload size={32} className="text-gray-400" />
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-200">
                   {selectedFile ? selectedFile.name : 'Нажмите для выбора файла'}
                 </span>
                 <span className="text-xs text-gray-500">
@@ -124,26 +124,26 @@ export default function ImportModal({ onClose }: ImportModalProps) {
           {/* Результат импорта */}
           {importResult && (
             <div className={`border rounded-lg p-4 ${
-              importResult.errors.length > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'
+              importResult.errors.length > 0 ? 'bg-yellow-900 bg-opacity-20 border-yellow-700' : 'bg-green-900 bg-opacity-20 border-green-700'
             }`}>
               <h3 className="font-semibold mb-2 flex items-center gap-2">
                 {importResult.errors.length > 0 ? (
                   <>
-                    <AlertCircle size={18} className="text-yellow-600" />
-                    <span className="text-yellow-900">Импорт завершен с ошибками</span>
+                    <AlertCircle size={18} className="text-yellow-400" />
+                    <span className="text-yellow-300">Импорт завершен с ошибками</span>
                   </>
                 ) : (
-                  <span className="text-green-900">Импорт успешно завершен</span>
+                  <span className="text-green-300">Импорт успешно завершен</span>
                 )}
               </h3>
-              <div className="text-sm space-y-1">
+              <div className="text-sm space-y-1 text-gray-300">
                 <p><strong>Импортировано:</strong> {importResult.imported} из {importResult.total}</p>
                 {importResult.errors.length > 0 && (
                   <div className="mt-2">
-                    <p className="font-semibold text-red-800">Ошибки:</p>
+                    <p className="font-semibold text-red-400">Ошибки:</p>
                     <ul className="list-disc list-inside max-h-40 overflow-y-auto">
                       {importResult.errors.map((error: string, idx: number) => (
-                        <li key={idx} className="text-red-700">{error}</li>
+                        <li key={idx} className="text-red-300">{error}</li>
                       ))}
                     </ul>
                   </div>
@@ -154,7 +154,7 @@ export default function ImportModal({ onClose }: ImportModalProps) {
                   setSelectedFile(null);
                   setImportResult(null);
                 }}
-                className="mt-4 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="mt-4 px-4 py-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-lg hover:bg-gray-600"
               >
                 Импортировать еще
               </button>
@@ -162,10 +162,10 @@ export default function ImportModal({ onClose }: ImportModalProps) {
           )}
 
           {/* Закрыть */}
-          <div className="flex justify-end pt-4 border-t">
+          <div className="flex justify-end pt-4 border-t border-gray-700">
             <button
               onClick={onClose}
-              className="px-6 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-6 py-2 text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-700"
             >
               Закрыть
             </button>

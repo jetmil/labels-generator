@@ -100,15 +100,15 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+      <div className="bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+        <div className="sticky top-0 bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-100">
             {candle ? 'Редактировать свечу' : 'Добавить новую свечу'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-400 hover:text-gray-200"
           >
             <X size={24} />
           </button>
@@ -116,36 +116,36 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Название *</label>
+            <label className="block text-sm font-medium mb-1 text-gray-300">Название *</label>
             <input
               type="text"
               required
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               placeholder="Например: СВЕЧА ОЧИЩЕНИЯ"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Слоган</label>
+            <label className="block text-sm font-medium mb-1 text-gray-300">Слоган</label>
             <input
               type="text"
               value={formData.tagline}
               onChange={(e) => setFormData(prev => ({ ...prev, tagline: e.target.value }))}
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               placeholder="Например: Путь к чистоте"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Категория</label>
+            <label className="block text-sm font-medium mb-1 text-gray-300">Категория</label>
             {!isCreatingCategory ? (
               <div className="flex gap-2">
                 <select
                   value={formData.category_id}
                   onChange={(e) => setFormData(prev => ({ ...prev, category_id: parseInt(e.target.value) }))}
-                  className="flex-1 border rounded-lg px-3 py-2"
+                  className="flex-1 bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                 >
                   <option value={0}>Без категории</option>
                   {categories.map(cat => (
@@ -166,7 +166,7 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
                   type="text"
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
-                  className="flex-1 border rounded-lg px-3 py-2"
+                  className="flex-1 bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                   placeholder="Название новой категории"
                   autoFocus
                 />
@@ -187,7 +187,7 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
                     setIsCreatingCategory(false);
                     setNewCategory('');
                   }}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500"
                 >
                   Отмена
                 </button>
@@ -196,35 +196,35 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Описание *</label>
+            <label className="block text-sm font-medium mb-1 text-gray-300">Описание *</label>
             <textarea
               required
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               rows={3}
               placeholder="Краткое описание свечи..."
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Практика *</label>
+            <label className="block text-sm font-medium mb-1 text-gray-300">Практика *</label>
             <textarea
               required
               value={formData.practice}
               onChange={(e) => setFormData(prev => ({ ...prev, practice: e.target.value }))}
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               rows={4}
               placeholder="Инструкции по использованию..."
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Ритуальный текст</label>
+            <label className="block text-sm font-medium mb-1 text-gray-300">Ритуальный текст</label>
             <textarea
               value={formData.ritual_text}
               onChange={(e) => setFormData(prev => ({ ...prev, ritual_text: e.target.value }))}
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               rows={3}
               placeholder="Заговор или молитва..."
             />
@@ -232,22 +232,22 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Цвет</label>
+              <label className="block text-sm font-medium mb-1 text-gray-300">Цвет</label>
               <input
                 type="text"
                 value={formData.color}
                 onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2"
+                className="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                 placeholder="Например: Белый"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Аромат</label>
+              <label className="block text-sm font-medium mb-1 text-gray-300">Аромат</label>
               <input
                 type="text"
                 value={formData.scent}
                 onChange={(e) => setFormData(prev => ({ ...prev, scent: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2"
+                className="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                 placeholder="Например: Лаванда"
               />
             </div>
@@ -255,37 +255,37 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Бренд</label>
+              <label className="block text-sm font-medium mb-1 text-gray-300">Бренд</label>
               <input
                 type="text"
                 value={formData.brand_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, brand_name: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2"
+                className="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Сайт</label>
+              <label className="block text-sm font-medium mb-1 text-gray-300">Сайт</label>
               <input
                 type="text"
                 value={formData.website}
                 onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2"
+                className="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Логотип</label>
+              <label className="block text-sm font-medium mb-1 text-gray-300">Логотип</label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={formData.logo_image}
                   onChange={(e) => setFormData(prev => ({ ...prev, logo_image: e.target.value }))}
-                  className="flex-1 border rounded-lg px-3 py-2 text-sm"
+                  className="flex-1 bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                   placeholder="URL или загрузите"
                 />
-                <label className="px-3 py-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
+                <label className="px-3 py-2 bg-gray-600 text-gray-200 rounded-lg cursor-pointer hover:bg-gray-500">
                   <Upload size={20} />
                   <input
                     type="file"
@@ -301,16 +301,16 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">QR код</label>
+              <label className="block text-sm font-medium mb-1 text-gray-300">QR код</label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={formData.qr_image}
                   onChange={(e) => setFormData(prev => ({ ...prev, qr_image: e.target.value }))}
-                  className="flex-1 border rounded-lg px-3 py-2 text-sm"
+                  className="flex-1 bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                   placeholder="URL или загрузите"
                 />
-                <label className="px-3 py-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
+                <label className="px-3 py-2 bg-gray-600 text-gray-200 rounded-lg cursor-pointer hover:bg-gray-500">
                   <Upload size={20} />
                   <input
                     type="file"
@@ -333,18 +333,18 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
               id="is_active"
               checked={formData.is_active}
               onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
-              className="rounded"
+              className="rounded bg-gray-700 border-gray-600 text-purple-600 focus:ring-purple-500"
             />
-            <label htmlFor="is_active" className="text-sm font-medium">
+            <label htmlFor="is_active" className="text-sm font-medium text-gray-300">
               Активная (отображается в каталоге)
             </label>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t">
+          <div className="flex justify-end gap-2 pt-4 border-t border-gray-700">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-6 py-2 text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-700"
             >
               Отмена
             </button>

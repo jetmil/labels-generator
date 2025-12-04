@@ -62,13 +62,13 @@ export default function PrintModal({ selectedCandles, onClose }: PrintModalProps
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-md w-full">
-        <div className="flex justify-between items-center px-6 py-4 border-b">
-          <h2 className="text-xl font-semibold">Печать этикеток</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+      <div className="bg-gray-800 rounded-lg max-w-md w-full border border-gray-700">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-100">Печать этикеток</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-400 hover:text-gray-200"
           >
             <X size={24} />
           </button>
@@ -76,10 +76,10 @@ export default function PrintModal({ selectedCandles, onClose }: PrintModalProps
 
         <div className="p-6">
           <div className="mb-6">
-            <p className="text-gray-700 mb-2">
-              Выбрано свечей: <span className="font-semibold">{selectedCandles.length}</span>
+            <p className="text-gray-200 mb-2">
+              Выбрано свечей: <span className="font-semibold text-purple-400">{selectedCandles.length}</span>
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-400">
               Будет сгенерирован HTML-файл с этикетками формата А4.
               Этикетки размещаются по 6 штук на странице (2 колонки × 3 ряда).
             </p>
@@ -106,14 +106,14 @@ export default function PrintModal({ selectedCandles, onClose }: PrintModalProps
 
             <button
               onClick={onClose}
-              className="w-full px-4 py-3 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="w-full px-4 py-3 text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-700"
             >
               Отмена
             </button>
           </div>
 
-          <div className="mt-6 p-4 bg-yellow-50 rounded-lg">
-            <p className="text-sm text-yellow-800">
+          <div className="mt-6 p-4 bg-yellow-900 bg-opacity-20 border border-yellow-700 rounded-lg">
+            <p className="text-sm text-yellow-300">
               <strong>Совет:</strong> Перед печатью проверьте настройки принтера.
               Рекомендуется использовать плотную бумагу для этикеток.
             </p>

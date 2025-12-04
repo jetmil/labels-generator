@@ -70,20 +70,20 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 py-8">
+    <div className="min-h-screen bg-gray-900 py-8">
       <div className="container mx-auto px-4">
         <header className="mb-8">
-          <h1 className="text-4xl font-bold text-purple-800 mb-2">
+          <h1 className="text-4xl font-bold text-gray-100 mb-2">
             Генератор этикеток АРТ-СВЕЧИ
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-400">
             Управление каталогом свечей и генерация этикеток для печати
           </p>
         </header>
 
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div className="bg-gray-800 rounded-lg shadow-xl border border-gray-700 p-6 mb-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800">Каталог свечей</h2>
+            <h2 className="text-2xl font-semibold text-gray-100">Каталог свечей</h2>
             <div className="flex gap-2">
               <button
                 onClick={() => {
@@ -136,11 +136,11 @@ export default function Home() {
             </div>
 
             <div className="flex gap-3 items-center">
-              <span className="text-sm text-gray-600">Сортировка:</span>
+              <span className="text-sm text-gray-300">Сортировка:</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'name' | 'created_at')}
-                className="border rounded px-3 py-1 text-sm"
+                className="bg-gray-700 border-gray-600 text-gray-100 rounded px-3 py-1 text-sm"
               >
                 <option value="created_at">По дате</option>
                 <option value="name">По названию</option>
@@ -148,7 +148,7 @@ export default function Home() {
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                className="border rounded px-3 py-1 text-sm"
+                className="bg-gray-700 border-gray-600 text-gray-100 rounded px-3 py-1 text-sm"
               >
                 <option value="desc">Убывание</option>
                 <option value="asc">Возрастание</option>
@@ -157,7 +157,7 @@ export default function Home() {
           </div>
 
           {isLoading ? (
-            <div className="text-center py-8">Загрузка...</div>
+            <div className="text-center py-8 text-gray-300">Загрузка...</div>
           ) : (
             <div className="grid gap-4">
               {candles?.map((candle) => (
@@ -165,8 +165,8 @@ export default function Home() {
                   key={candle.id}
                   className={`border rounded-lg p-4 hover:shadow-md transition ${
                     selectedCandles.includes(candle.id)
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200'
+                      ? 'border-purple-500 bg-purple-900 bg-opacity-20'
+                      : 'border-gray-600 bg-gray-700'
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -175,7 +175,7 @@ export default function Home() {
                       className={`mt-1 w-6 h-6 rounded border-2 flex items-center justify-center ${
                         selectedCandles.includes(candle.id)
                           ? 'bg-purple-600 border-purple-600'
-                          : 'border-gray-300 hover:border-purple-400'
+                          : 'border-gray-500 hover:border-purple-400'
                       }`}
                     >
                       {selectedCandles.includes(candle.id) && (
@@ -186,13 +186,13 @@ export default function Home() {
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-800">
+                          <h3 className="text-lg font-semibold text-gray-100">
                             {candle.name}
                           </h3>
                           {candle.tagline && (
-                            <p className="text-sm text-gray-600 italic">{candle.tagline}</p>
+                            <p className="text-sm text-gray-400 italic">{candle.tagline}</p>
                           )}
-                          <p className="text-sm text-purple-600 mt-1">
+                          <p className="text-sm text-purple-400 mt-1">
                             {candle.category?.name || 'Без категории'}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
@@ -205,21 +205,21 @@ export default function Home() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleEdit(candle)}
-                            className="text-blue-600 hover:text-blue-700 p-1"
+                            className="text-blue-400 hover:text-blue-300 p-1"
                             title="Редактировать"
                           >
                             <Edit2 size={18} />
                           </button>
                           <button
                             onClick={() => handleDelete(candle.id)}
-                            className="text-red-600 hover:text-red-700 p-1"
+                            className="text-red-400 hover:text-red-300 p-1"
                             title="Удалить"
                           >
                             <Trash2 size={18} />
                           </button>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-700 mt-2 line-clamp-2">
+                      <p className="text-sm text-gray-300 mt-2 line-clamp-2">
                         {candle.description}
                       </p>
                     </div>
