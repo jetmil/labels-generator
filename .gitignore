@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+ENV/
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/dist/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads (but keep directories)
+uploads/logos/*
+uploads/qr/*
+!uploads/logos/.gitkeep
+!uploads/qr/.gitkeep
+uploads/logo/*
+!uploads/logo/.gitkeep
+
+# Test files
+test_labels*.html
+
+# Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
