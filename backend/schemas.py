@@ -84,3 +84,4 @@ class GenerateLabelsRequest(BaseModel):
     candle_ids: List[int]
     format: str = "html"  # html, pdf
     labels_per_page: int = 6
+    print_type: str = "both"  # labels, instructions, both

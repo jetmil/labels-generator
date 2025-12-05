@@ -224,7 +224,7 @@ def generate_labels(request: schemas.GenerateLabelsRequest, db: Session = Depend
         raise HTTPException(status_code=404, detail="No candles found")
 
     if request.format == "html":
-        html_content = generate_labels_html(candles, request.labels_per_page)
+        html_content = generate_labels_html(candles, request.labels_per_page, request.print_type)
         return HTMLResponse(content=html_content)
     else:
         raise HTTPException(status_code=400, detail="Unsupported format")

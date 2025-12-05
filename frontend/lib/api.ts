@@ -101,11 +101,12 @@ export const categoryApi = {
 };
 
 export const labelApi = {
-  generate: async (candleIds: number[], format: string = 'html') => {
+  generate: async (candleIds: number[], format: string = 'html', printType: string = 'both') => {
     const response = await api.post('/generate-labels', {
       candle_ids: candleIds,
       format,
       labels_per_page: 6,
+      print_type: printType,
     });
     return response.data;
   },

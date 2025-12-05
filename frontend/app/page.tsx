@@ -67,8 +67,30 @@ export default function Home() {
   const updateQuantityMutation = useMutation({
     mutationFn: ({ id, quantity }: { id: number; quantity: number }) =>
       candleApi.update(id, { quantity }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['candles'] });
+    onMutate: async (variables) => {
+      // Отменяем исходящие рефетчи (чтобы они не перезаписали наше оптимистичное обновление)
+      await queryClient.cancelQueries({ queryKey: ['candles', sortBy, sortOrder, searchQuery] });
+
+      // Сохраняем предыдущее значение для rollback
+      const previousCandles = queryClient.getQueryData(['candles', sortBy, sortOrder, searchQuery]);
+
+      // Оптимистично обновляем кэш
+      queryClient.setQueryData(['candles', sortBy, sortOrder, searchQuery], (old: Candle[] | undefined) => {
+        if (!old) return old;
+        return old.map(candle =>
+          candle.id === variables.id
+            ? { ...candle, quantity: variables.quantity }
+            : candle
+        );
+      });
+
+      return { previousCandles };
+    },
+    onError: (_err, _variables, context) => {
+      // При ошибке откатываем к предыдущему состоянию
+      if (context?.previousCandles) {
+        queryClient.setQueryData(['candles', sortBy, sortOrder, searchQuery], context.previousCandles);
+      }
     },
   });
 
@@ -85,6 +107,23 @@ export default function Home() {
   const handleQuantityInput = (id: number, value: string) => {
     const numValue = parseInt(value);
     if (!isNaN(numValue) && numValue >= 1 && numValue <= 100) {
+      updateQuantityMutation.mutate({ id, quantity: numValue });
+    } else if (value === '') {
+      // Если поле очищено, не делаем ничего (ждём blur)
+      return;
+    }
+  };
+
+  const handleQuantityBlur = (id: number, value: string) => {
+    const candle = candles?.find(c => c.id === id);
+    if (!candle) return;
+
+    const numValue = parseInt(value);
+    // Если невалидное значение или пустое, возвращаем к текущему
+    if (isNaN(numValue) || numValue < 1 || numValue > 100) {
+      // Триггерим re-render для возврата к оригинальному значению
+      queryClient.invalidateQueries({ queryKey: ['candles', sortBy, sortOrder, searchQuery] });
+    } else if (numValue !== candle.quantity) {
       updateQuantityMutation.mutate({ id, quantity: numValue });
     }
   };
@@ -289,6 +328,12 @@ export default function Home() {
                             max="100"
                             value={candle.quantity}
                             onChange={(e) => handleQuantityInput(candle.id, e.target.value)}
+                            onBlur={(e) => handleQuantityBlur(candle.id, e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.currentTarget.blur();
+                              }
+                            }}
                             className="w-16 text-center font-semibold bg-gray-600 border border-gray-500 text-gray-100 rounded px-2 py-1 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                           />
                           <button

@@ -48,17 +48,20 @@ def check_overflow(candle: Candle) -> List[str]:
     if len(candle.name) > 30:
         warnings.append(f"Название слишком длинное ({len(candle.name)} символов, рекомендуется до 30)")
 
-    # Проверка описания для этикетки (короткая версия)
-    if len(candle.description) > 250:
-        warnings.append(f"Описание слишком длинное ({len(candle.description)} символов, рекомендуется до 250)")
+    # Проверка описания для этикетки (с учётом адаптивных размеров)
+    desc_len = len(candle.description)
+    if desc_len > 450:
+        warnings.append(f"Описание критически длинное ({desc_len} символов, рекомендуется до 450)")
+    elif desc_len > 400:
+        warnings.append(f"Описание очень длинное ({desc_len} символов, будет использован минимальный шрифт 5.5pt)")
 
     # Проверка практики для инструкции
-    if candle.practice and len(candle.practice) > 400:
-        warnings.append(f"Практика слишком длинная ({len(candle.practice)} символов, рекомендуется до 400)")
+    if candle.practice and len(candle.practice) > 450:
+        warnings.append(f"Практика слишком длинная ({len(candle.practice)} символов, рекомендуется до 450)")
 
     # Проверка заговора
-    if candle.ritual_text and len(candle.ritual_text) > 300:
-        warnings.append(f"Заговор слишком длинный ({len(candle.ritual_text)} символов, рекомендуется до 300)")
+    if candle.ritual_text and len(candle.ritual_text) > 350:
+        warnings.append(f"Заговор слишком длинный ({len(candle.ritual_text)} символов, рекомендуется до 350)")
 
     # Общая проверка для инструкции
     total_instruction_length = (
@@ -66,13 +69,20 @@ def check_overflow(candle: Candle) -> List[str]:
         len(candle.practice or '') +
         len(candle.ritual_text or '')
     )
-    if total_instruction_length > 800:
+    if total_instruction_length > 900:
         warnings.append(f"Общий объём текста инструкции критический ({total_instruction_length} символов, может не поместиться на карточке)")
 
     return warnings
 
-def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str:
-    """Generate HTML for printing labels with rich magical design"""
+def generate_labels_html(candles: List[Candle], labels_per_page: int = 6, print_type: str = 'both') -> str:
+    """
+    Generate HTML for printing labels with rich magical design
+
+    Args:
+        candles: List of candles to print
+        labels_per_page: Number of labels per page (default 6, max 9)
+        print_type: Type of pages to print - 'labels', 'instructions', or 'both' (default)
+    """
 
     html_template = """
 <!DOCTYPE html>
@@ -140,7 +150,7 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            padding: 4mm;
+            padding: 3.5mm;
             color: #2d0a3d;
         }
 
@@ -166,7 +176,7 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
 
         .label-header {
             text-align: center;
-            margin-bottom: 2mm;
+            margin-bottom: 1.5mm;
             position: relative;
             z-index: 1;
         }
@@ -200,17 +210,19 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
         }
 
         .label-tagline {
-            font-size: 8pt;
+            font-size: 7pt;
             font-style: italic;
             color: #8b2c5f;
-            margin-top: 1.5mm;
+            margin-top: 0.5mm;
+            margin-bottom: 1mm;
             font-weight: 500;
+            line-height: 1.1;
         }
 
         .label-logo-area {
-            width: 18mm;
-            height: 18mm;
-            margin: 3mm auto;
+            width: 15mm;
+            height: 15mm;
+            margin: 2mm auto;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -229,18 +241,49 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
 
         .label-description {
             flex: 1;
-            font-size: 7.5pt;
-            line-height: 1.4;
+            font-size: 6.5pt;
+            line-height: 1.2;
             color: #3d0a4d;
             text-align: center;
-            padding: 0 2mm;
+            padding: 0 1.5mm;
             position: relative;
             z-index: 1;
             overflow: hidden;
             display: -webkit-box;
-            -webkit-line-clamp: 5;
+            -webkit-line-clamp: 9;
             -webkit-box-orient: vertical;
             font-weight: 500;
+        }
+
+        /* Адаптивные размеры для разной длины текста */
+        .label-description.text-short {
+            font-size: 8.5pt;
+            line-height: 1.3;
+            -webkit-line-clamp: 6;
+        }
+
+        .label-description.text-medium {
+            font-size: 7.5pt;
+            line-height: 1.25;
+            -webkit-line-clamp: 7;
+        }
+
+        .label-description.text-long {
+            font-size: 6.5pt;
+            line-height: 1.2;
+            -webkit-line-clamp: 9;
+        }
+
+        .label-description.text-very-long {
+            font-size: 6pt;
+            line-height: 1.15;
+            -webkit-line-clamp: 10;
+        }
+
+        .label-description.text-overflow {
+            font-size: 5.5pt;
+            line-height: 1.1;
+            -webkit-line-clamp: 11;
         }
 
         .label-footer {
@@ -251,15 +294,15 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
 
         .label-brand {
             text-align: center;
-            margin-bottom: 2mm;
+            margin-bottom: 1mm;
         }
 
         .label-brand-name {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 12pt;
+            font-size: 10pt;
             font-weight: 600;
             color: #8b4513;
-            letter-spacing: 2px;
+            letter-spacing: 1.5px;
         }
 
         .label-website {
@@ -276,11 +319,11 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
         }
 
         .label-qr {
-            width: 12mm;
-            height: 12mm;
+            width: 10mm;
+            height: 10mm;
             background: white;
             border-radius: 2px;
-            padding: 1mm;
+            padding: 0.5mm;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -303,7 +346,7 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
             width: 60%;
             height: 1px;
             background: linear-gradient(90deg, transparent, rgba(139,44,95,0.5), transparent);
-            margin: 2mm auto;
+            margin: 1mm auto;
         }
 
         /* Страница с инструкциями - 4 на A4 */
@@ -664,34 +707,43 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
         instruction_pages.append(expanded_candles[i:i + instructions_per_page_count])
 
     # Generate label pages
-    for page_num, page_candles in enumerate(label_pages):
-        html_template += f'    <!-- СТРАНИЦА {page_num + 1}: Этикетки -->\n'
-        html_template += f'    <div class="page page-labels">\n'
+    if print_type in ('labels', 'both'):
+        for page_num, page_candles in enumerate(label_pages):
+            html_template += f'    <!-- СТРАНИЦА {page_num + 1}: Этикетки -->\n'
+            html_template += f'    <div class="page page-labels">\n'
 
-        for candle in page_candles:
-            category_name = candle.category.name if candle.category else "Магическая свеча"
+            for candle in page_candles:
+                category_name = candle.category.name if candle.category else "Магическая свеча"
 
-            # Convert paths to base64 data URLs
-            logo_path = candle.logo_image or "/uploads/logo/logo.png"
-            qr_path = candle.qr_image or "/uploads/qr/qr.png"
+                # Convert paths to base64 data URLs
+                logo_path = candle.logo_image or "/uploads/logo/logo.png"
+                qr_path = candle.qr_image or "/uploads/qr/qr.png"
 
-            # Convert to absolute paths and then to base64
-            logo_abs = logo_path if logo_path.startswith('/var/www') else f"/var/www/labels{logo_path}"
-            qr_abs = qr_path if qr_path.startswith('/var/www') else f"/var/www/labels{qr_path}"
+                # Convert to absolute paths and then to base64
+                logo_abs = logo_path if logo_path.startswith('/var/www') else f"/var/www/labels{logo_path}"
+                qr_abs = qr_path if qr_path.startswith('/var/www') else f"/var/www/labels{qr_path}"
 
-            logo_base64 = image_to_base64(logo_abs) or logo_path
-            qr_base64 = image_to_base64(qr_abs) or qr_path
+                logo_base64 = image_to_base64(logo_abs) or logo_path
+                qr_base64 = image_to_base64(qr_abs) or qr_path
 
-            # Check if name is long - адаптивный размер
-            name_len = len(candle.name)
-            if name_len > 30:
-                name_class = "label-name very-long-title"
-            elif name_len > 15:
-                name_class = "label-name long-title"
-            else:
-                name_class = "label-name"
+                # Check if name is long - адаптивный размер
+                name_len = len(candle.name)
+                if name_len > 30:
+                    name_class = "label-name very-long-title"
+                elif name_len > 15:
+                    name_class = "label-name long-title"
+                else:
+                    name_class = "label-name"
 
-            html_template += f"""
+                # Адаптивный размер для описания
+                desc_size_class = get_text_size_class(candle.description, {
+                    'short': 100,
+                    'medium': 200,
+                    'long': 300,
+                    'very_long': 400
+                })
+
+                html_template += f"""
         <div class="label">
             <div class="label-header">
                 <div class="label-category">{category_name}</div>
@@ -701,7 +753,7 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
             <div class="label-logo-area">
                 <img src="{logo_base64}" alt="АРТ-СВЕЧИ">
             </div>
-            <div class="label-description">
+            <div class="label-description {desc_size_class}">
                 {candle.description}
             </div>
             <div class="divider"></div>
@@ -722,40 +774,41 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
         </div>
 """
 
-        html_template += '    </div>\n\n'
+            html_template += '    </div>\n\n'
 
     # Generate instruction pages
-    for page_num, page_candles in enumerate(instruction_pages):
-        html_template += f'    <!-- СТРАНИЦА {len(label_pages) + page_num + 1}: Инструкции -->\n'
-        html_template += f'    <div class="page page-instructions">\n'
+    if print_type in ('instructions', 'both'):
+        for page_num, page_candles in enumerate(instruction_pages):
+            html_template += f'    <!-- СТРАНИЦА {len(label_pages) + page_num + 1}: Инструкции -->\n'
+            html_template += f'    <div class="page page-instructions">\n'
 
-        for candle in page_candles:
-            # Convert paths to base64 data URLs
-            logo_path = candle.logo_image or "/uploads/logo/logo.png"
-            qr_path = candle.qr_image or "/uploads/qr/qr.png"
+            for candle in page_candles:
+                # Convert paths to base64 data URLs
+                logo_path = candle.logo_image or "/uploads/logo/logo.png"
+                qr_path = candle.qr_image or "/uploads/qr/qr.png"
 
-            # Convert to absolute paths and then to base64
-            logo_abs = logo_path if logo_path.startswith('/var/www') else f"/var/www/labels{logo_path}"
-            qr_abs = qr_path if qr_path.startswith('/var/www') else f"/var/www/labels{qr_path}"
+                # Convert to absolute paths and then to base64
+                logo_abs = logo_path if logo_path.startswith('/var/www') else f"/var/www/labels{logo_path}"
+                qr_abs = qr_path if qr_path.startswith('/var/www') else f"/var/www/labels{qr_path}"
 
-            logo_base64 = image_to_base64(logo_abs) or logo_path
-            qr_base64 = image_to_base64(qr_abs) or qr_path
+                logo_base64 = image_to_base64(logo_abs) or logo_path
+                qr_base64 = image_to_base64(qr_abs) or qr_path
 
-            # Адаптивные классы для заголовка
-            title_len = len(candle.name)
-            if title_len > 30:
-                title_class = "very-long-title"
-            elif title_len > 20:
-                title_class = "long-title"
-            else:
-                title_class = ""
+                # Адаптивные классы для заголовка
+                title_len = len(candle.name)
+                if title_len > 30:
+                    title_class = "very-long-title"
+                elif title_len > 20:
+                    title_class = "long-title"
+                else:
+                    title_class = ""
 
-            # Адаптивные классы для текстов
-            desc_class = get_text_size_class(candle.description, {'short': 100, 'medium': 200, 'long': 300, 'very_long': 400})
-            practice_class = get_text_size_class(candle.practice or '', {'short': 150, 'medium': 250, 'long': 350, 'very_long': 450})
-            ritual_class = get_text_size_class(candle.ritual_text or '', {'short': 100, 'medium': 200, 'long': 280, 'very_long': 350})
+                # Адаптивные классы для текстов
+                desc_class = get_text_size_class(candle.description, {'short': 100, 'medium': 200, 'long': 300, 'very_long': 400})
+                practice_class = get_text_size_class(candle.practice or '', {'short': 150, 'medium': 250, 'long': 350, 'very_long': 450})
+                ritual_class = get_text_size_class(candle.ritual_text or '', {'short': 100, 'medium': 200, 'long': 280, 'very_long': 350})
 
-            html_template += f"""
+                html_template += f"""
         <div class="instruction-card">
             <div class="instruction-header">
                 <div class="instruction-logo">
@@ -790,7 +843,7 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6) -> str
         </div>
 """
 
-        html_template += '    </div>\n\n'
+            html_template += '    </div>\n\n'
 
     html_template += """
 </body>

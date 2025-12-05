@@ -11,11 +11,12 @@ interface PrintModalProps {
 
 export default function PrintModal({ selectedCandles, onClose }: PrintModalProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [printType, setPrintType] = useState<'labels' | 'instructions' | 'both'>('both');
 
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      const response = await labelApi.generate(selectedCandles, 'html');
+      const response = await labelApi.generate(selectedCandles, 'html', printType);
 
       // Create a blob from HTML response
       const blob = new Blob([response], { type: 'text/html' });
@@ -41,7 +42,7 @@ export default function PrintModal({ selectedCandles, onClose }: PrintModalProps
   const handleDownload = async () => {
     setIsGenerating(true);
     try {
-      const response = await labelApi.generate(selectedCandles, 'html');
+      const response = await labelApi.generate(selectedCandles, 'html', printType);
 
       // Create a blob and download
       const blob = new Blob([response], { type: 'text/html' });
@@ -79,10 +80,56 @@ export default function PrintModal({ selectedCandles, onClose }: PrintModalProps
             <p className="text-gray-200 mb-2">
               Выбрано свечей: <span className="font-semibold text-purple-400">{selectedCandles.length}</span>
             </p>
-            <p className="text-sm text-gray-400">
-              Будет сгенерирован HTML-файл с этикетками формата А4.
-              Этикетки размещаются по 6 штук на странице (2 колонки × 3 ряда).
-            </p>
+          </div>
+
+          <div className="mb-6">
+            <p className="text-gray-200 mb-3 font-medium">Что печатать:</p>
+            <div className="space-y-2">
+              <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-650">
+                <input
+                  type="radio"
+                  name="printType"
+                  value="both"
+                  checked={printType === 'both'}
+                  onChange={(e) => setPrintType(e.target.value as any)}
+                  className="w-4 h-4 text-purple-600"
+                />
+                <div>
+                  <span className="text-gray-100 font-medium">Этикетки + Практика</span>
+                  <p className="text-xs text-gray-400">Полный комплект: 9 этикеток + 4 инструкции на лист A4</p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-650">
+                <input
+                  type="radio"
+                  name="printType"
+                  value="labels"
+                  checked={printType === 'labels'}
+                  onChange={(e) => setPrintType(e.target.value as any)}
+                  className="w-4 h-4 text-purple-600"
+                />
+                <div>
+                  <span className="text-gray-100 font-medium">Только этикетки</span>
+                  <p className="text-xs text-gray-400">9 этикеток на лист A4 (3×3)</p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-650">
+                <input
+                  type="radio"
+                  name="printType"
+                  value="instructions"
+                  checked={printType === 'instructions'}
+                  onChange={(e) => setPrintType(e.target.value as any)}
+                  className="w-4 h-4 text-purple-600"
+                />
+                <div>
+                  <span className="text-gray-100 font-medium">Только практика</span>
+                  <p className="text-xs text-gray-400">4 инструкции на лист A4 (2×2)</p>
+                </div>
+              </label>
+            </div>
           </div>
 
           <div className="space-y-3">
