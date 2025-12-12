@@ -5,6 +5,7 @@ import { Providers } from "./providers";
 export const metadata: Metadata = {
   title: "Генератор этикеток АРТ-СВЕЧИ",
   description: "Система управления и генерации этикеток для магических свечей",
+  robots: "noindex, nofollow, nosnippet, noarchive, notranslate, noimageindex",
 };
 
 export default function RootLayout({

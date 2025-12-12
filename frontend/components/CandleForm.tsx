@@ -11,9 +11,26 @@ interface CandleFormProps {
   onClose: () => void;
 }
 
+interface CandleFormData {
+  name: string;
+  tagline: string;
+  category_id: number;
+  description: string;
+  practice: string;
+  ritual_text: string;
+  color: string;
+  scent: string;
+  brand_name: string;
+  website: string;
+  qr_image: string;
+  logo_image: string;
+  quantity: number;
+  is_active: boolean;
+}
+
 export default function CandleForm({ candle, categories, onClose }: CandleFormProps) {
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CandleFormData>({
     name: '',
     tagline: '',
     category_id: 0,

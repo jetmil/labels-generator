@@ -56,6 +56,7 @@ class Candle(CandleBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    last_modified_at: datetime
     category: Optional[Category] = None
 
     class Config:

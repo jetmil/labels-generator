@@ -1,7 +1,8 @@
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 import os
 import shutil
@@ -14,6 +15,7 @@ from database import get_db, engine
 from models import Base, Category, Candle, LabelSet, LabelSetCandle
 import schemas
 from label_generator import generate_labels_html
+from auth import authenticate_user, get_current_user
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -34,14 +36,34 @@ app.add_middleware(
 def read_root():
     return {"message": "Labels Generator API", "version": "1.0.0"}
 
+# Login endpoint
+@app.post("/api/login")
+def login(login: str = Form(...), password: str = Form(...)):
+    """Аутентификация пользователя"""
+    token = authenticate_user(login, password)
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Неверный логин или пароль",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return {"access_token": token, "token_type": "bearer"}
+
 # Category endpoints
 @app.get("/api/categories", response_model=List[schemas.Category])
-def get_categories(db: Session = Depends(get_db)):
+def get_categories(
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     categories = db.query(Category).all()
     return categories
 
 @app.post("/api/categories", response_model=schemas.Category)
-def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_db)):
+def create_category(
+    category: schemas.CategoryCreate,
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     db_category = Category(name=category.name)
     db.add(db_category)
     db.commit()
@@ -52,12 +74,13 @@ def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_
 @app.get("/api/candles", response_model=List[schemas.Candle])
 def get_candles(
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 1000,
     category_id: Optional[int] = None,
     is_active: Optional[bool] = True,
     search: Optional[str] = None,
-    sort_by: Optional[str] = "created_at",  # name, created_at
+    sort_by: Optional[str] = "created_at",  # name, created_at, last_modified_at
     sort_order: Optional[str] = "desc",  # asc, desc
+    current_user: str = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     query = db.query(Candle)
@@ -73,6 +96,8 @@ def get_candles(
     # Применяем сортировку
     if sort_by == "name":
         query = query.order_by(Candle.name.asc() if sort_order == "asc" else Candle.name.desc())
+    elif sort_by == "last_modified_at":
+        query = query.order_by(Candle.last_modified_at.asc() if sort_order == "asc" else Candle.last_modified_at.desc())
     else:  # created_at по умолчанию
         query = query.order_by(Candle.created_at.asc() if sort_order == "asc" else Candle.created_at.desc())
 
@@ -80,14 +105,22 @@ def get_candles(
     return candles
 
 @app.get("/api/candles/{candle_id}", response_model=schemas.Candle)
-def get_candle(candle_id: int, db: Session = Depends(get_db)):
+def get_candle(
+    candle_id: int,
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     candle = db.query(Candle).filter(Candle.id == candle_id).first()
     if not candle:
         raise HTTPException(status_code=404, detail="Candle not found")
     return candle
 
 @app.post("/api/candles", response_model=schemas.Candle)
-def create_candle(candle: schemas.CandleCreate, db: Session = Depends(get_db)):
+def create_candle(
+    candle: schemas.CandleCreate,
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     candle_data = candle.dict()
     # Конвертируем category_id=0 в NULL
     if candle_data.get('category_id') == 0:
@@ -95,12 +128,22 @@ def create_candle(candle: schemas.CandleCreate, db: Session = Depends(get_db)):
 
     db_candle = Candle(**candle_data)
     db.add(db_candle)
-    db.commit()
-    db.refresh(db_candle)
-    return db_candle
+
+    try:
+        db.commit()
+        db.refresh(db_candle)
+        return db_candle
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Свеча с таким названием уже существует")
 
 @app.put("/api/candles/{candle_id}", response_model=schemas.Candle)
-def update_candle(candle_id: int, candle: schemas.CandleUpdate, db: Session = Depends(get_db)):
+def update_candle(
+    candle_id: int,
+    candle: schemas.CandleUpdate,
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     db_candle = db.query(Candle).filter(Candle.id == candle_id).first()
     if not db_candle:
         raise HTTPException(status_code=404, detail="Candle not found")
@@ -113,12 +156,20 @@ def update_candle(candle_id: int, candle: schemas.CandleUpdate, db: Session = De
     for field, value in update_data.items():
         setattr(db_candle, field, value)
 
-    db.commit()
-    db.refresh(db_candle)
-    return db_candle
+    try:
+        db.commit()
+        db.refresh(db_candle)
+        return db_candle
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Свеча с таким названием уже существует")
 
 @app.delete("/api/candles/{candle_id}")
-def delete_candle(candle_id: int, db: Session = Depends(get_db)):
+def delete_candle(
+    candle_id: int,
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     db_candle = db.query(Candle).filter(Candle.id == candle_id).first()
     if not db_candle:
         raise HTTPException(status_code=404, detail="Candle not found")
@@ -129,12 +180,19 @@ def delete_candle(candle_id: int, db: Session = Depends(get_db)):
 
 # Label Set endpoints
 @app.get("/api/label-sets", response_model=List[schemas.LabelSet])
-def get_label_sets(db: Session = Depends(get_db)):
+def get_label_sets(
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     label_sets = db.query(LabelSet).all()
     return label_sets
 
 @app.get("/api/label-sets/{label_set_id}", response_model=schemas.LabelSetWithCandles)
-def get_label_set(label_set_id: int, db: Session = Depends(get_db)):
+def get_label_set(
+    label_set_id: int,
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     label_set = db.query(LabelSet).filter(LabelSet.id == label_set_id).first()
     if not label_set:
         raise HTTPException(status_code=404, detail="Label set not found")
@@ -148,7 +206,11 @@ def get_label_set(label_set_id: int, db: Session = Depends(get_db)):
     return result
 
 @app.post("/api/label-sets", response_model=schemas.LabelSet)
-def create_label_set(label_set: schemas.LabelSetCreate, db: Session = Depends(get_db)):
+def create_label_set(
+    label_set: schemas.LabelSetCreate,
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     db_label_set = LabelSet(name=label_set.name, description=label_set.description)
     db.add(db_label_set)
     db.commit()
@@ -168,7 +230,10 @@ def create_label_set(label_set: schemas.LabelSetCreate, db: Session = Depends(ge
 
 # Upload endpoints
 @app.post("/api/upload/logo")
-async def upload_logo(file: UploadFile = File(...)):
+async def upload_logo(
+    file: UploadFile = File(...),
+    current_user: str = Depends(get_current_user)
+):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No filename provided")
 
@@ -192,7 +257,10 @@ async def upload_logo(file: UploadFile = File(...)):
     return {"filename": filename, "url": f"/uploads/logos/{filename}"}
 
 @app.post("/api/upload/qr")
-async def upload_qr(file: UploadFile = File(...)):
+async def upload_qr(
+    file: UploadFile = File(...),
+    current_user: str = Depends(get_current_user)
+):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No filename provided")
 
@@ -217,7 +285,11 @@ async def upload_qr(file: UploadFile = File(...)):
 
 # Generate labels endpoint
 @app.post("/api/generate-labels")
-def generate_labels(request: schemas.GenerateLabelsRequest, db: Session = Depends(get_db)):
+def generate_labels(
+    request: schemas.GenerateLabelsRequest,
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     candles = db.query(Candle).filter(Candle.id.in_(request.candle_ids)).all()
 
     if not candles:
@@ -231,7 +303,11 @@ def generate_labels(request: schemas.GenerateLabelsRequest, db: Session = Depend
 
 # Bulk import endpoint
 @app.post("/api/candles/import")
-async def import_candles(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def import_candles(
+    file: UploadFile = File(...),
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """Import candles from CSV or JSON file"""
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file provided")
@@ -344,7 +420,9 @@ async def import_candles(file: UploadFile = File(...), db: Session = Depends(get
 
 # Download CSV template
 @app.get("/api/candles/template/csv")
-def download_csv_template():
+def download_csv_template(
+    current_user: str = Depends(get_current_user)
+):
     """Download CSV template for bulk import"""
     csv_content = """name,tagline,category,description,practice,ritual_text,color,scent,brand_name,website,qr_image,logo_image,is_active
 СВЕЧА ОЧИЩЕНИЯ,Путь к чистоте,Программная свеча,Свеча для глубокого очищения ауры и пространства,Зажгите свечу в тихом месте. Сосредоточьтесь на намерении очищения.,Огонь горит - очищает. Свет сияет - защищает. Да будет так.,Белый,Лаванда,АРТ-СВЕЧИ,art-svechi.ligardi.ru,/uploads/qr/qr.png,/uploads/logo/logo.png,1"""

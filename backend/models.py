@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, TIMESTAMP, func
+from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, TIMESTAMP, func, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -13,6 +13,7 @@ class Category(Base):
 
 class Candle(Base):
     __tablename__ = "candles"
+    __table_args__ = (UniqueConstraint('name', name='unique_candle_name'),)
 
     id = Column(Integer, primary_key=True, index=True)
     category_id = Column(Integer, ForeignKey("categories.id"))
@@ -31,6 +32,7 @@ class Candle(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+    last_modified_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
     category = relationship("Category", back_populates="candles")
     label_sets = relationship("LabelSetCandle", back_populates="candle")

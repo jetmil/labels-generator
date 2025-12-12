@@ -7,6 +7,20 @@ export const api = axios.create({
   baseURL: API_URL ? API_URL : '/api',
 });
 
+// Добавляем перехватчик для обработки ошибок аутентификации
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Если получили 401, удаляем токен и перенаправляем на логин
+      localStorage.removeItem('token');
+      delete api.defaults.headers.common['Authorization'];
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export interface Category {
   id: number;
   name: string;
@@ -31,6 +45,7 @@ export interface Candle {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  last_modified_at: string;
   category?: Category;
 }
 
@@ -48,7 +63,7 @@ export const candleApi = {
     category_id?: number;
     is_active?: boolean;
     search?: string;
-    sort_by?: 'name' | 'created_at';
+    sort_by?: 'name' | 'created_at' | 'last_modified_at';
     sort_order?: 'asc' | 'desc';
   }) => {
     const response = await api.get<Candle[]>('/candles', { params });
@@ -60,12 +75,12 @@ export const candleApi = {
     return response.data;
   },
 
-  create: async (data: Omit<Candle, 'id' | 'created_at' | 'updated_at'>) => {
+  create: async (data: Omit<Candle, 'id' | 'created_at' | 'updated_at' | 'last_modified_at'>) => {
     const response = await api.post<Candle>('/candles', data);
     return response.data;
   },
 
-  update: async (id: number, data: Partial<Candle>) => {
+  update: async (id: number, data: Partial<Omit<Candle, 'id' | 'created_at' | 'updated_at' | 'last_modified_at'>>) => {
     const response = await api.put<Candle>(`/candles/${id}`, data);
     return response.data;
   },

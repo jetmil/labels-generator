@@ -1,23 +1,44 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit2, Trash2, Printer, Check, Upload } from 'lucide-react';
 import { candleApi, categoryApi, labelApi, Candle } from '@/lib/api';
+import { checkAuth, logout, isAuthenticated } from '@/lib/auth';
 import CandleForm from '@/components/CandleForm';
 import PrintModal from '@/components/PrintModal';
 import ImportModal from '@/components/ImportModal';
 
 export default function Home() {
+  const router = useRouter();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCandle, setEditingCandle] = useState<Candle | null>(null);
   const [selectedCandles, setSelectedCandles] = useState<number[]>([]);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'created_at'>('created_at');
+  const [sortBy, setSortBy] = useState<'name' | 'created_at' | 'last_modified_at'>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
+
+  // Проверяем аутентификацию при загрузке
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
+    checkAuth();
+  }, [router]);
+
+  // Если не аутентифицирован, показываем загрузку
+  if (!isAuthenticated()) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-gray-400">Загрузка...</div>
+      </div>
+    );
+  }
 
   const { data: candles, isLoading } = useQuery({
     queryKey: ['candles', sortBy, sortOrder, searchQuery],
@@ -142,12 +163,22 @@ export default function Home() {
     <div className="min-h-screen bg-gray-900 py-8">
       <div className="container mx-auto px-4">
         <header className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-100 mb-2">
-            Генератор этикеток АРТ-СВЕЧИ
-          </h1>
-          <p className="text-gray-400">
-            Управление каталогом свечей и генерация этикеток для печати
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-100 mb-2">
+                Генератор этикеток АРТ-СВЕЧИ
+              </h1>
+              <p className="text-gray-400">
+                Управление каталогом свечей и генерация этикеток для печати
+              </p>
+            </div>
+            <button
+              onClick={logout}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+            >
+              Выйти
+            </button>
+          </div>
         </header>
 
         <div className="bg-gray-800 rounded-lg shadow-xl border border-gray-700 p-6 mb-8">
@@ -227,10 +258,11 @@ export default function Home() {
                 <span className="text-sm text-gray-300">Сортировка:</span>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'name' | 'created_at')}
+                  onChange={(e) => setSortBy(e.target.value as 'name' | 'created_at' | 'last_modified_at')}
                   className="bg-gray-700 border-gray-600 text-gray-100 rounded px-3 py-1 text-sm"
                 >
-                  <option value="created_at">По дате</option>
+                  <option value="created_at">По дате создания</option>
+                  <option value="last_modified_at">По дате изменения</option>
                   <option value="name">По названию</option>
                 </select>
                 <select
@@ -286,8 +318,8 @@ export default function Home() {
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
                             Создано: {new Date(candle.created_at).toLocaleDateString('ru-RU')}
-                            {candle.updated_at && candle.updated_at !== candle.created_at && (
-                              <> • Изменено: {new Date(candle.updated_at).toLocaleDateString('ru-RU')}</>
+                            {candle.last_modified_at && candle.last_modified_at !== candle.created_at && (
+                              <> • Последнее изменение: {new Date(candle.last_modified_at).toLocaleDateString('ru-RU')}</>
                             )}
                           </p>
                         </div>

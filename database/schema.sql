@@ -24,7 +24,9 @@ CREATE TABLE candles (
     logo_image VARCHAR(500),
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_candle_name UNIQUE (name)
 );
 
 -- Таблица для сохраненных наборов этикеток
@@ -50,19 +52,20 @@ CREATE INDEX idx_candles_active ON candles(is_active);
 CREATE INDEX idx_label_set_candles_set ON label_set_candles(label_set_id);
 CREATE INDEX idx_label_set_candles_candle ON label_set_candles(candle_id);
 
--- Триггер для обновления updated_at
-CREATE OR REPLACE FUNCTION update_updated_at()
+-- Триггер для обновления updated_at и last_modified_at
+CREATE OR REPLACE FUNCTION update_timestamps()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
+    NEW.last_modified_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER update_candles_updated_at
+CREATE TRIGGER update_candles_timestamps
 BEFORE UPDATE ON candles
 FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();
+EXECUTE FUNCTION update_timestamps();
 
 -- Начальные данные для категорий
 INSERT INTO categories (name) VALUES
