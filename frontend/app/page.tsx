@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit2, Trash2, Printer, Check, Upload } from 'lucide-react';
@@ -17,8 +17,8 @@ export default function Home() {
   const [selectedCandles, setSelectedCandles] = useState<number[]>([]);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'created_at' | 'last_modified_at'>('created_at');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState<'sequence_number' | 'name' | 'created_at' | 'last_modified_at'>('sequence_number');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
 
@@ -53,6 +53,16 @@ export default function Home() {
     queryKey: ['categories'],
     queryFn: categoryApi.getAll,
   });
+
+  // Сортируем: выбранные свечи вверху, сохраняя порядок сортировки между собой
+  const sortedCandles = useMemo(() => {
+    if (!candles) return [];
+
+    const selected = candles.filter(c => selectedCandles.includes(c.id));
+    const unselected = candles.filter(c => !selectedCandles.includes(c.id));
+
+    return [...selected, ...unselected];
+  }, [candles, selectedCandles]);
 
   const deleteMutation = useMutation({
     mutationFn: candleApi.delete,
@@ -171,6 +181,11 @@ export default function Home() {
               <p className="text-gray-400">
                 Управление каталогом свечей и генерация этикеток для печати
               </p>
+              {candles && (
+                <p className="text-gray-500 mt-1">
+                  Всего свечей: {candles.length} (Нумерация: с №{candles[0]?.sequence_number || 1} по №{candles[candles.length - 1]?.sequence_number || candles.length})
+                </p>
+              )}
             </div>
             <button
               onClick={logout}
@@ -235,32 +250,44 @@ export default function Home() {
 
             <div className="flex justify-between items-center">
               <div className="flex gap-2">
+                <button
+                  onClick={selectAll}
+                  className="text-sm text-purple-600 hover:text-purple-700"
+                >
+                  Выбрать все
+                </button>
+                <span className="text-gray-400">|</span>
+                <button
+                  onClick={deselectAll}
+                  className="text-sm text-purple-600 hover:text-purple-700"
+                >
+                  Снять выделение
+                </button>
                 {selectedCandles.length > 0 && (
                   <>
-                    <button
-                      onClick={selectAll}
-                      className="text-sm text-purple-600 hover:text-purple-700"
-                    >
-                      Выбрать все
-                    </button>
                     <span className="text-gray-400">|</span>
                     <button
-                      onClick={deselectAll}
-                      className="text-sm text-purple-600 hover:text-purple-700"
+                      onClick={() => {
+                        const updates = candles?.map(candle => ({ id: candle.id, quantity: 1 })) || [];
+                        updates.forEach(update => {
+                          updateQuantityMutation.mutate({ id: update.id, quantity: 1 });
+                        });
+                      }}
+                      className="text-sm text-orange-600 hover:text-orange-700"
                     >
-                      Снять выделение
+                      Обнулить количество
                     </button>
                   </>
                 )}
               </div>
-
               <div className="flex gap-3 items-center">
                 <span className="text-sm text-gray-300">Сортировка:</span>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'name' | 'created_at' | 'last_modified_at')}
+                  onChange={(e) => setSortBy(e.target.value as 'sequence_number' | 'name' | 'created_at' | 'last_modified_at')}
                   className="bg-gray-700 border-gray-600 text-gray-100 rounded px-3 py-1 text-sm"
                 >
+                  <option value="sequence_number">По номеру</option>
                   <option value="created_at">По дате создания</option>
                   <option value="last_modified_at">По дате изменения</option>
                   <option value="name">По названию</option>
@@ -281,7 +308,7 @@ export default function Home() {
             <div className="text-center py-8 text-gray-300">Загрузка...</div>
           ) : (
             <div className="grid gap-4">
-              {candles?.map((candle) => (
+              {sortedCandles.map((candle) => (
                 <div
                   key={candle.id}
                   className={`border rounded-lg p-4 hover:shadow-md transition ${
@@ -308,7 +335,7 @@ export default function Home() {
                       <div className="flex justify-between items-start">
                         <div>
                           <h3 className="text-lg font-semibold text-gray-100">
-                            {candle.name}
+                            {candle.sequence_number ? `${candle.sequence_number}. ` : ""}{candle.display_name || candle.name}
                           </h3>
                           {candle.tagline && (
                             <p className="text-sm text-gray-400 italic">{candle.tagline}</p>
@@ -316,6 +343,11 @@ export default function Home() {
                           <p className="text-sm text-purple-400 mt-1">
                             {candle.category?.name || 'Без категории'}
                           </p>
+                          {candle.sequence_number && (
+                            <p className="text-xs text-yellow-400 mt-1">
+                              Порядковый номер: {candle.sequence_number}
+                            </p>
+                          )}
                           <p className="text-xs text-gray-500 mt-1">
                             Создано: {new Date(candle.created_at).toLocaleDateString('ru-RU')}
                             {candle.last_modified_at && candle.last_modified_at !== candle.created_at && (

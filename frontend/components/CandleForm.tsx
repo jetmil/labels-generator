@@ -1,9 +1,50 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { X, Upload } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { candleApi, categoryApi, uploadApi, Candle, Category } from '@/lib/api';
+
+// Рекомендуемые лимиты символов для областей печати
+const CHAR_LIMITS = {
+  name: 30,
+  description: 450,
+  practice: 450,
+  ritual_text: 350,
+};
+
+// Функция для определения статуса заполнения
+function getCharStatus(current: number, max: number): 'ok' | 'warning' | 'danger' {
+  const ratio = current / max;
+  if (ratio <= 0.8) return 'ok';
+  if (ratio <= 1) return 'warning';
+  return 'danger';
+}
+
+// Компонент счётчика символов
+function CharCounter({ current, max, label }: { current: number; max: number; label?: string }) {
+  const status = getCharStatus(current, max);
+  const statusColors = {
+    ok: 'text-green-400',
+    warning: 'text-yellow-400',
+    danger: 'text-red-400',
+  };
+  const bgColors = {
+    ok: 'bg-green-900/30',
+    warning: 'bg-yellow-900/30',
+    danger: 'bg-red-900/30',
+  };
+
+  return (
+    <div className={`flex items-center justify-between text-xs mt-1 px-2 py-1 rounded ${bgColors[status]}`}>
+      <span className="text-gray-400">{label || 'Символов'}</span>
+      <span className={statusColors[status]}>
+        {current} / {max}
+        {status === 'danger' && <span className="ml-1">⚠️ превышен лимит</span>}
+      </span>
+    </div>
+  );
+}
 
 interface CandleFormProps {
   candle: Candle | null;
@@ -144,6 +185,7 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
               className="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               placeholder="Например: СВЕЧА ОЧИЩЕНИЯ"
             />
+            <CharCounter current={formData.name.length} max={CHAR_LIMITS.name} label="Для этикетки" />
           </div>
 
           <div>
@@ -238,6 +280,7 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
               rows={3}
               placeholder="Краткое описание свечи..."
             />
+            <CharCounter current={formData.description.length} max={CHAR_LIMITS.description} label="Для этикетки и инструкции" />
           </div>
 
           <div>
@@ -250,6 +293,7 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
               rows={4}
               placeholder="Инструкции по использованию..."
             />
+            <CharCounter current={formData.practice.length} max={CHAR_LIMITS.practice} label="Для инструкции" />
           </div>
 
           <div>
@@ -261,6 +305,18 @@ export default function CandleForm({ candle, categories, onClose }: CandleFormPr
               rows={3}
               placeholder="Заговор или молитва..."
             />
+            <CharCounter current={formData.ritual_text.length} max={CHAR_LIMITS.ritual_text} label="Для инструкции" />
+          </div>
+
+          {/* Общий счётчик для карточки инструкции */}
+          <div className="p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="text-sm font-medium text-gray-300 mb-2">📋 Общий объём текста инструкции</div>
+            <CharCounter
+              current={formData.description.length + formData.practice.length + formData.ritual_text.length}
+              max={900}
+              label="Описание + Практика + Заговор"
+            />
+            <p className="text-xs text-gray-500 mt-1">При превышении 900 символов текст может не поместиться на карточке</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

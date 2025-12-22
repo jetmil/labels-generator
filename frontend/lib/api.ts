@@ -29,6 +29,8 @@ export interface Category {
 
 export interface Candle {
   id: number;
+  sequence_number?: number;
+  display_name?: string;
   category_id?: number;
   name: string;
   tagline?: string;
@@ -63,10 +65,16 @@ export const candleApi = {
     category_id?: number;
     is_active?: boolean;
     search?: string;
-    sort_by?: 'name' | 'created_at' | 'last_modified_at';
+    sort_by?: 'sequence_number' | 'name' | 'created_at' | 'last_modified_at';
     sort_order?: 'asc' | 'desc';
   }) => {
-    const response = await api.get<Candle[]>('/candles', { params });
+    // По умолчанию сортируем по sequence_number
+    const defaultParams = {
+      sort_by: 'sequence_number' as const,
+      sort_order: 'asc' as const,
+      ...params
+    };
+    const response = await api.get<Candle[]>('/candles', { params: defaultParams });
     return response.data;
   },
 
@@ -75,12 +83,12 @@ export const candleApi = {
     return response.data;
   },
 
-  create: async (data: Omit<Candle, 'id' | 'created_at' | 'updated_at' | 'last_modified_at'>) => {
+  create: async (data: Omit<Candle, 'id' | 'created_at' | 'updated_at' | 'last_modified_at' | 'sequence_number' | 'display_name'>) => {
     const response = await api.post<Candle>('/candles', data);
     return response.data;
   },
 
-  update: async (id: number, data: Partial<Omit<Candle, 'id' | 'created_at' | 'updated_at' | 'last_modified_at'>>) => {
+  update: async (id: number, data: Partial<Omit<Candle, 'id' | 'created_at' | 'updated_at' | 'last_modified_at' | 'sequence_number'>>) => {
     const response = await api.put<Candle>(`/candles/${id}`, data);
     return response.data;
   },

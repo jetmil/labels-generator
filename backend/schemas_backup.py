@@ -18,8 +18,6 @@ class Category(CategoryBase):
 
 # Candle schemas
 class CandleBase(BaseModel):
-    sequence_number: Optional[int] = None
-    display_name: Optional[str] = None
     category_id: Optional[int] = None
     name: str
     tagline: Optional[str] = None
@@ -39,8 +37,6 @@ class CandleCreate(CandleBase):
     pass
 
 class CandleUpdate(BaseModel):
-    sequence_number: Optional[int] = None
-    display_name: Optional[str] = None
     category_id: Optional[int] = None
     name: Optional[str] = None
     tagline: Optional[str] = None

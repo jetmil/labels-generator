@@ -8,7 +8,7 @@ from jose import JWTError, jwt
 # Секретный ключ для JWT (в реальном приложении должен быть в .env)
 SECRET_KEY = "your-super-secret-key-change-this-in-production"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 720  # 12 часов
 
 # Пароль и логин администратора
 ADMIN_LOGIN = "jetmil"

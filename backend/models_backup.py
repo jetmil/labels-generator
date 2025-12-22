@@ -16,8 +16,6 @@ class Candle(Base):
     __table_args__ = (UniqueConstraint('name', name='unique_candle_name'),)
 
     id = Column(Integer, primary_key=True, index=True)
-    sequence_number = Column(Integer, nullable=True)  # Добавляем поле порядкового номера
-    display_name = Column(String(300), nullable=True)  # Добавляем поле для отображения с номером
     category_id = Column(Integer, ForeignKey("categories.id"))
     name = Column(String(200), nullable=False)
     tagline = Column(String(200))

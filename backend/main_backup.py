@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func
 from typing import List, Optional
 import os
 import shutil
@@ -126,11 +125,6 @@ def create_candle(
     # Конвертируем category_id=0 в NULL
     if candle_data.get('category_id') == 0:
         candle_data['category_id'] = None
-
-    # Автоматически присваиваем sequence_number если не указан
-    if not candle_data.get('sequence_number'):
-        max_seq = db.query(func.max(Candle.sequence_number)).scalar()
-        candle_data['sequence_number'] = (max_seq or 0) + 1
 
     db_candle = Candle(**candle_data)
     db.add(db_candle)

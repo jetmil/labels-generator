@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func
 from typing import List, Optional
 import os
 import shutil
@@ -20,6 +19,8 @@ from auth import authenticate_user, get_current_user
 
 # Create tables
 Base.metadata.create_all(bind=engine)
+n# Обновляем метаданные для новых полей
+# Обновляем метаданные для новых полейBase.metadata.reflect(bind=engine)# Принудительно обновляем таблицу Candlefrom sqlalchemy import inspectinspector = inspect(engine)if "candles" in inspector.get_table_names():    existing_columns = [c["name"] for c in inspector.get_columns("candles")]    if "sequence_number" in existing_columns and "display_name" in existing_columns:        print("✅ Новые поля найдены в БД")    else:        print("❌ Новые поля НЕ найдены в БД")
 
 app = FastAPI(title="Labels Generator API", version="1.0.0")
 
@@ -126,11 +127,6 @@ def create_candle(
     # Конвертируем category_id=0 в NULL
     if candle_data.get('category_id') == 0:
         candle_data['category_id'] = None
-
-    # Автоматически присваиваем sequence_number если не указан
-    if not candle_data.get('sequence_number'):
-        max_seq = db.query(func.max(Candle.sequence_number)).scalar()
-        candle_data['sequence_number'] = (max_seq or 0) + 1
 
     db_candle = Candle(**candle_data)
     db.add(db_candle)
@@ -297,6 +293,9 @@ def generate_labels(
     db: Session = Depends(get_db)
 ):
     candles = db.query(Candle).filter(Candle.id.in_(request.candle_ids)).all()
+    print(f"DEBUG: Найдено {len(candles)} свечей")
+    for c in candles:
+        print(f"DEBUG: ID={c.id}, sequence={c.sequence_number}, display_name={c.display_name}")
 
     if not candles:
         raise HTTPException(status_code=404, detail="No candles found")

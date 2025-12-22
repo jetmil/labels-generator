@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  labels-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.secure
+    container_name: labels-frontend
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=100M,noexec,nosuid,nodev
+      - /app/.next/cache:size=200M,noexec,nosuid,nodev
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    ports:
+      - "127.0.0.1:3200:3000"
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://192.168.0.95:8202
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL

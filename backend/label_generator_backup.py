@@ -659,7 +659,7 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6, print_
         warnings = check_overflow(candle)
         if warnings:
             all_warnings[candle.id] = {
-                'name': candle.display_name or candle.name,
+                'name': candle.name,
                 'warnings': warnings
             }
 
@@ -747,7 +747,7 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6, print_
         <div class="label">
             <div class="label-header">
                 <div class="label-category">{category_name}</div>
-                <div class="{name_class}">{candle.sequence_number or ''}. {candle.display_name or candle.name}</div>
+                <div class="{name_class}">{candle.name}</div>
                 {f'<div class="label-tagline">{candle.tagline}</div>' if candle.tagline else ''}
             </div>
             <div class="label-logo-area">
@@ -815,7 +815,7 @@ def generate_labels_html(candles: List[Candle], labels_per_page: int = 6, print_
                     <img src="{logo_base64}" alt="АРТ-СВЕЧИ">
                 </div>
                 <div class="instruction-title">
-                    <h2 class="{title_class}">{candle.display_name or candle.name}</h2>
+                    <h2 class="{title_class}">{candle.name}</h2>
                     {f'<div class="instruction-subtitle">{candle.tagline}</div>' if candle.tagline else ''}
                 </div>
                 <div class="instruction-qr">
